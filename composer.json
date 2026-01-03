@@ -1,0 +1,13 @@
+{
+    "name": "server/server",
+    "description": "server",
+    "type": "project",
+    "autoload": {
+        "psr-4": {
+            "Server\\Server\\": "src/"
+        }
+    },
+    "require": {
+        "ankitpokhrel/tus-php": "^2.4"
+    }
+}

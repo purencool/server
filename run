@@ -1,0 +1,25 @@
+
+IMAGE_NAME="server-app" 
+CONTAINER_NAME="server-app" 
+DOCKERFILE_PATH="."
+
+echo "Stopping and removing old container: $CONTAINER_NAME"
+docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+echo "Building new Docker image: $IMAGE_NAME"
+docker build -t "$IMAGE_NAME" "$DOCKERFILE_PATH"
+ 
+echo "Cleaning up dangling images"
+docker image prune -f
+
+echo "Running new container: $CONTAINER_NAME"
+docker run -d \
+  --name "$CONTAINER_NAME" \
+  -p 8000:80 \
+  -v "$(pwd):/var/www/html" \
+  "$IMAGE_NAME"
+
+echo "Adjusting permissions for uploads and cache..."
+chmod -R 777 uploads/ tus_cache/ 2>/dev/null || true
+
+echo "Success: Server running at http://localhost:8000"
