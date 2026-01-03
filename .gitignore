@@ -63,3 +63,7 @@ composer.phar
 package.tar
 /packages.json
 /.phpunit
+/data_tests
+/data_tests/*
+.env.local
+.ddev

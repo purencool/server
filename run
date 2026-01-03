@@ -13,13 +13,13 @@ echo "Cleaning up dangling images"
 docker image prune -f
 
 echo "Running new container: $CONTAINER_NAME"
-docker run -d \
-  --name "$CONTAINER_NAME" \
-  -p 8000:80 \
-  -v "$(pwd):/var/www/html" \
-  "$IMAGE_NAME"
+#docker run -d \
+#  --name "$CONTAINER_NAME" \
+#  -p 8000:80 \
+#  -v "$(pwd):/var/www/html" \
+#  "$IMAGE_NAME"
 
 echo "Adjusting permissions for uploads and cache..."
-chmod -R 777 uploads/ tus_cache/ 2>/dev/null || true
+#chmod -R 777 uploads/ tus_cache/ 2>/dev/null || true
 
 echo "Success: Server running at http://localhost:8000"

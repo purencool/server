@@ -12,11 +12,13 @@ $valid_key      = 'your-secret-key-here';
 $valid_token    = 'your-secret-token-here'; 
 
 // Paths adjusted to live outside of src/ for security
-$upload_base_dir     = __DIR__ . "/../uploads/";
-$upload_dir     = __DIR__ . "/../uploads/$valid_username";
-$tus_cache_dir  = __DIR__ . '/../tus_cache/';
+$upload_data_dir     = __DIR__ . "/../data_tests/";
+$upload_base_dir     = __DIR__ . "/../data_tests/uploads/";
+$upload_dir     = __DIR__ . "/../data_tests/uploads/$valid_username";
+$tus_cache_dir  = __DIR__ . '/../data_tests/tus_cache/';
 
 $dirs = [
+    'Data Test dir' => $upload_data_dir,
     'Base Uploads' => $upload_base_dir,
     'Uploads' => $upload_dir,
     'Tus Cache' => $tus_cache_dir
@@ -32,8 +34,6 @@ foreach ($dirs as $name => $path) {
     }
 }
 
-echo $upload_base_dir;
-exit;
 foreach ([$upload_dir, $tus_cache_dir] as $dir) {
     if (!is_dir($dir)) mkdir($dir, 0755, true);
 }
