@@ -1,63 +1,81 @@
 <?php
 
-// Adjusted path to reach vendor folder from src/
 require __DIR__ . '/../vendor/autoload.php';
 
 use TusPhp\Tus\Server as TusServer;
 
-// Configuration
-$valid_username = 'username-here';
-$valid_password = 'password-here';
-$valid_key      = 'your-secret-key-here';   
-$valid_token    = 'your-secret-token-here'; 
-
-// Paths adjusted to live outside of src/ for security
-$upload_data_dir     = __DIR__ . "/../data_tests/";
-$upload_base_dir     = __DIR__ . "/../data_tests/uploads/";
-$upload_dir     = __DIR__ . "/../data_tests/uploads/$valid_username";
-$tus_cache_dir  = __DIR__ . '/../data_tests/tus_cache/';
-
-$dirs = [
-    'Data Test dir' => $upload_data_dir,
-    'Base Uploads' => $upload_base_dir,
-    'Uploads' => $upload_dir,
-    'Tus Cache' => $tus_cache_dir
+// Your specific user array structure
+$users = [
+    '1' => [
+        'username' => 'user-1',
+        'password' => 'pass-1',
+        'token'    => 'token-1',
+        'key'      => 'key-1'
+    ],
+    '2' => [
+        'username' => 'user-2',
+        'password' => 'pass-2',
+        'token'    => 'token-2',
+        'key'      => 'key-2' 
+    ],
 ];
 
-foreach ($dirs as $name => $path) {
-    if (!is_dir($path)) {
-        if (!mkdir($path, 0755, true)) {
-            header('HTTP/1.1 500 Internal Server Error');
-            echo json_encode(['error' => "Failed to create $name directory at $path. Check server permissions."]);
+$method = $_SERVER['REQUEST_METHOD'];
+
+//  Handle Login Action
+if ($method === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
+    $provided_user = $_POST['username'] ?? '';
+    $provided_pass = $_POST['password'] ?? '';
+
+    foreach ($users as $id => $data) {
+        if ($data['username'] === $provided_user && $data['password'] === $provided_pass) {
+            header('Content-Type: application/json');
+            echo json_encode([
+                'status'     => 'success',
+                'api_key'    => $data['key'],
+                'auth_token' => $data['token']
+            ]);
             exit;
         }
     }
-}
-
-foreach ([$upload_dir, $tus_cache_dir] as $dir) {
-    if (!is_dir($dir)) mkdir($dir, 0755, true);
-}
-
-
-exit;
-$method = $_SERVER['REQUEST_METHOD'];
-
-// Routing Logic
-if ($method === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login') {
-    handleLogin($valid_username, $valid_password, $valid_key, $valid_token);
+    
+    header('HTTP/1.1 401 Unauthorized');
+    echo json_encode(['error' => 'Invalid credentials.']);
     exit;
 }
 
-// Auth Check
-$headers = getallheaders();
+// Auth Check & User Identification
+$headers        = getallheaders();
 $provided_key   = $headers['X-API-KEY'] ?? '';
 $provided_token = $headers['X-AUTH-TOKEN'] ?? '';
 
-if ($provided_key !== $valid_key || $provided_token !== $valid_token) {
+$currentUser = null;
+
+// Loop through users to find who matches the provided Key and Token
+foreach ($users as $id => $data) {
+    if ($data['key'] === $provided_key && $data['token'] === $provided_token) {
+        $currentUser = $data;
+        break;
+    }
+}
+
+if (!$currentUser) {
     header('Content-Type: application/json');
     header('HTTP/1.1 401 Unauthorized');
-    echo json_encode(['error' => 'Authentication failed.']);
+    echo json_encode(['error' => 'Authentication failed. Check keys/tokens.']). '\n';
     exit;
+}
+
+// Set up User-Specific Directories based on the identified user
+$username_folder = $currentUser['username'];
+$upload_base_dir = __DIR__ . "/../data_tests/uploads/";
+$upload_dir      = $upload_base_dir . $username_folder . "/"; 
+$tus_cache_dir   = __DIR__ . '/../data_tests/tus_cache/';
+
+foreach ([$upload_base_dir, $upload_dir, $tus_cache_dir] as $dir) {
+    if (!is_dir($dir)) {
+        mkdir($dir, 0755, true);
+    }
 }
 
 // Handle TUS Uploads
@@ -73,7 +91,7 @@ if (in_array($method, $tus_methods) && !isset($_GET['download'])) {
         $metadata = $file->details()['metadata'];
         
         if (isset($metadata['relativePath'])) {
-            $finalPath = $upload_dir . $metadata['relativePath'];
+            $finalPath = $upload_dir . ltrim($metadata['relativePath'], '/');
             if (!is_dir(dirname($finalPath))) {
                 mkdir(dirname($finalPath), 0755, true);
             }
@@ -81,8 +99,7 @@ if (in_array($method, $tus_methods) && !isset($_GET['download'])) {
         }
     });
 
-    $response = $server->serve();
-    $response->send();
+    $server->serve()->send();
     exit;
 }
 
@@ -95,22 +112,7 @@ if ($method === 'GET') {
     }
 }
 
-/**
- * 
- */
-function handleLogin($user, $pass, $key, $token) {
-    header('Content-Type: application/json');
-    if (($_POST['username'] ?? '') === $user && ($_POST['password'] ?? '') === $pass) {
-        echo json_encode(['status' => 'success', 'api_key' => $key, 'auth_token' => $token]);
-    } else {
-        header('HTTP/1.1 401 Unauthorized');
-        echo json_encode(['error' => 'Invalid credentials.']);
-    }
-}
-
-/**
- * 
- */
+// Helper Functions
 function handleFileDownload($dir, $filename) {
     $path = realpath($dir . basename($filename));
     if ($path && strpos($path, realpath($dir)) === 0 && file_exists($path)) {
@@ -123,11 +125,8 @@ function handleFileDownload($dir, $filename) {
     }
 }
 
-/**
- * 
- */
 function handleListFiles($dir) {
     header('Content-Type: application/json');
-    $files = array_values(array_diff(scandir($dir), ['..', '.']));
+    $files = is_dir($dir) ? array_values(array_diff(scandir($dir), ['..', '.'])) : [];
     echo json_encode(['status' => 'success', 'files' => $files]);
 }

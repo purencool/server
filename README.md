@@ -23,14 +23,14 @@ curl -i -v  http://localhost:8000/src/sync.php
 ```
 curl -X POST http://localhost:8000/src/sync.php \
      -d "action=login" \
-     -d "username=admin" \
-     -d "password=password123"
+     -d "username=username-here" \
+     -d "password=password-here"
 ```     
 
 #### List Files
 ```
 curl -X GET http://localhost:8000/src/sync.php \
-     -H "X-API-KEY: your-secret-key-here" \
+     -H "X-API-KEY: your-secret-key-here'" \
      -H "X-AUTH-TOKEN: your-secret-token-here"
 ```
 
