@@ -7,16 +7,31 @@ use TusPhp\Tus\Server as TusServer;
 // Your specific user array structure
 $users = [
     '1' => [
-        'username' => 'user-1',
-        'password' => 'pass-1',
-        'token'    => 'token-1',
-        'key'      => 'key-1'
+        'username'    => 'u.c',
+        'password'    => 'p',
+        "unique_name" => "u.c",
+        "uuid"        => "u.c",
+        'token'       => 'token',
+        'key'         => 'key', 
+        'type'        => 'enterprise' 
     ],
     '2' => [
-        'username' => 'user-2',
-        'password' => 'pass-2',
-        'token'    => 'token-2',
-        'key'      => 'key-2' 
+        'username'    => 'u2.c',
+        'password'    => 'p',
+        "unique_name" => "u2.c",
+        "uuid"        => "u2.c",
+        'token'       => 'token2',
+        'key'         => 'key2', 
+        'type'        => 'customer' 
+    ],
+    '3' => [
+        'username'    => 'u3.c',
+        'password'    => 'p',
+        "unique_name" => "u3.c", 
+        "uuid"        => "u3.c", 
+        'token'       => 'token3',
+        'key'         => 'key3', 
+        'type'        => 'customer' 
     ],
 ];
 
@@ -33,7 +48,11 @@ if ($method === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login
             echo json_encode([
                 'status'     => 'success',
                 'api_key'    => $data['key'],
-                'auth_token' => $data['token']
+                'token'      => $data['token'],
+                'auth_token' => $data['auth_token'],
+                'unique_name'=> $data['unique_name'],
+                'uuid'       => $data['uuid'],
+                'type'       => $data['type'] 
             ]);
             exit;
         }
