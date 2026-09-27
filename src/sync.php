@@ -49,7 +49,6 @@ if ($method === 'POST' && isset($_POST['action']) && $_POST['action'] === 'login
                 'status'     => 'success',
                 'api_key'    => $data['key'],
                 'token'      => $data['token'],
-                'auth_token' => $data['auth_token'],
                 'unique_name'=> $data['unique_name'],
                 'uuid'       => $data['uuid'],
                 'type'       => $data['type'] 
